@@ -1,0 +1,17 @@
+{
+  "name": "backend-pattern-rules",
+  "owner": {
+    "name": "clirimajeti",
+    "url": "https://github.com/clirimajeti"
+  },
+  "description": "A skill that turns a backend codebase's own conventions into lint rules.",
+  "plugins": [
+    {
+      "name": "backend-pattern-rules",
+      "source": "./",
+      "description": "Turn backend codebase conventions into ast-grep lint rules with tests, or into the project's existing native rule set.",
+      "category": "engineering",
+      "keywords": ["ast-grep", "lint", "custom-rules", "architecture", "code-quality"]
+    }
+  ]
+}

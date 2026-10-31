@@ -1,0 +1,13 @@
+{
+  "name": "backend-pattern-rules",
+  "version": "0.1.0",
+  "description": "Turn a backend codebase's own conventions into ast-grep lint rules with tests, or into the project's existing native rule set. Language-agnostic, config-driven, asks before it builds.",
+  "author": {
+    "name": "clirimajeti",
+    "url": "https://github.com/clirimajeti"
+  },
+  "repository": "https://github.com/clirimajeti/backend-pattern-rules",
+  "license": "MIT",
+  "keywords": ["ast-grep", "lint", "custom-rules", "architecture", "detekt", "code-quality", "clean-code", "solid", "skills"],
+  "skills": ["./skills/backend-pattern-rules"]
+}

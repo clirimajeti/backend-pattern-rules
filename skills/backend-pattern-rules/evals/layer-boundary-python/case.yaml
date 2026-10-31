@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: layer-boundary-python
+expected_outcome: |
+  An ast-grep rule that stops a feature's router.py from importing repository modules (routers must go through services), handling absolute and relative imports and allowing TYPE_CHECKING imports, with passing tests and snapshots, registered through a new sgconfig.yml, flagging app/users/router.py and app/payments/router.py in the real code and nothing else.
+context:
+  scaffold_script: place-files.sh

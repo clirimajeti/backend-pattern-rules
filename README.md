@@ -1,0 +1,109 @@
+# Backend Pattern Rules
+
+An agent skill that turns your backend codebase's own conventions into lint rules, each with tests.
+
+Every codebase has conventions it mostly follows but never enforces.
+Domain code takes a `Clock`, routers go through services, IDs come from one helper.
+They live in review comments and in the heads of whoever was around when they were decided.
+
+This skill finds them, asks you which ones to enforce and how, and writes one rule per convention.
+The majority pattern becomes the only pattern.
+
+It works with Java, Kotlin, Python, Go, C#, PHP, Rust, Ruby and any other language [ast-grep](https://ast-grep.github.io) parses.
+For JavaScript and TypeScript, including Node backends, use the companion skill `eslint-pattern-rules`.
+
+## Installation
+
+### 1. Get the skill
+
+**Claude Code**
+
+```bash
+claude plugin marketplace add clirimajeti/backend-pattern-rules
+claude plugin install backend-pattern-rules@backend-pattern-rules
+```
+
+**Codex, Copilot, Cursor and others**
+
+```bash
+npx skills add clirimajeti/backend-pattern-rules
+```
+
+**Manual**
+
+Copy `skills/backend-pattern-rules/` into your agent's skills folder, for example `~/.claude/skills/backend-pattern-rules/`.
+
+### 2. Ask for a rule
+
+The skill is model-invoked, so there is no command to remember.
+Ask in your own words, or name it:
+
+- "Our routers must never import repositories. Turn that into a lint rule."
+- "Which of our ADRs could become lint rules?"
+- "Enforce our ADR about clock injection in the backends."
+
+## Where the rule goes
+
+The skill picks the first option that fits:
+
+1. **An existing check**: a rule in a linter you already run (Ruff, detekt, golangci-lint, Error Prone, analyzers) or an architecture test library you already depend on (ArchUnit, Konsist, import-linter, Deptrac).
+   You get its exact config instead of a new rule, including for rules that exist but are switched off.
+2. **Your own rule set**: when the project already maintains custom rules for a native tool (a detekt rule set, Error Prone checks, a flake8 plugin), the new rule is written there, in the same style, with the same tests and registration.
+3. **An ast-grep rule**: one YAML rule and one YAML test, registered through `sgconfig.yml`.
+
+## What it leaves alone
+
+- **Build files and lockfiles.**
+  ast-grep runs through `npx` or `uvx` at a pinned version, and the install command goes into the report.
+- **Baselines.**
+  New hits are never hidden in a baseline file without asking.
+- **Your source files and hand-written rules.**
+
+## How It Works
+
+1. **Detects your setup**: languages and build tools, ast-grep, the native checks you already run, your own rule sets, and decision records (ADRs).
+2. **Finds the convention**: the one you named, with its real examples and every violation, or a scan for candidates that skips anything already enforced.
+3. **Asks the design questions**: boundary, scope, fix, severity and rollout, each with a recommended answer and a real example from your code.
+4. **Writes the rule and its test**, and registers it.
+5. **Verifies** it: the tests pass, and every hit on your real code is accounted for.
+6. **Reports** the rules, hit counts, config changes, and what it did not build.
+
+### Configuration
+
+`skills/backend-pattern-rules/config.json` holds the defaults.
+A `.backend-pattern-rules.json` at your project root overrides them per project.
+
+```json
+{ "mode": "ask", "auto": { "maxRisk": "low", "maxFlaggedFiles": 3, "adrBacked": "auto" } }
+```
+
+| Key | Meaning |
+|---|---|
+| `mode` | `"ask"`: you pick every rule. `"auto"`: rules within the `auto` limits are built without asking. |
+| `auto.maxRisk` | Highest risk built without asking: `"low"` or `"medium"`. High-risk rules always ask. |
+| `auto.maxFlaggedFiles` | Most files a rule may report on day one and still be built without asking. |
+| `auto.adrBacked` | `"auto"`: a rule an ADR asks for, but nothing enforces yet, is built without asking in either mode. `"ask"`: it goes to you like the rest. |
+
+### Layout
+
+```
+skills/backend-pattern-rules/
+├── SKILL.md                    # the workflow
+├── config.json                 # selection defaults
+├── agents/openai.yaml          # Codex picker metadata
+├── references/
+│   ├── discovery.md            # candidate scan, coverage, risk, selection
+│   └── pattern-catalog.md      # signals to probe, with native checks to try first
+└── evals/                      # a test case for `claude plugin eval`
+```
+
+### Running the Evals
+
+```bash
+cd skills/backend-pattern-rules
+claude plugin eval . --allow-tools Write,Edit,Bash --scaffold
+```
+
+## License
+
+MIT

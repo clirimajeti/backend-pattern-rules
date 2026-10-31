@@ -1,0 +1,3 @@
+interface:
+  display_name: "Backend Pattern Rules"
+  short_description: "Turn backend codebase conventions into ast-grep lint rules"
