@@ -58,15 +58,24 @@ The skill picks the first option that fits:
 - **Baselines.**
   New hits are never hidden in a baseline file without asking.
 - **Your source files and hand-written rules.**
+- **Your agent docs**, except the lines you approve deleting or shortening once a rule enforces them.
 
 ## How It Works
 
-1. **Detects your setup**: languages and build tools, ast-grep, the native checks you already run, your own rule sets, and decision records (ADRs).
-2. **Finds the convention**: the one you named, with its real examples and every violation, or a scan for candidates that skips anything already enforced.
-3. **Asks the design questions**: boundary, scope, fix, severity and rollout, each with a recommended answer and a real example from your code.
-4. **Writes the rule and its test**, and registers it.
-5. **Verifies** it: the tests pass, and every hit on your real code is accounted for.
-6. **Reports** the rules, hit counts, config changes, and what it did not build.
+1. **Detects your setup**: languages and build tools, ast-grep, the native checks you already run, your own rule sets, decision records (ADRs), and agent docs (CLAUDE.md, AGENTS.md, Copilot and Cursor instructions).
+2. **Finds the convention**: the one you named, with its real examples and every violation, or a scan for candidates.
+   The scan looks at your code, your ADRs and the rules written as prose in your agent docs.
+   It also checks a list of well-known clean-code, bug-prevention, security and test rules your linters have but your project doesn't use yet, with how many places each would flag today.
+   It skips anything already enforced.
+3. **Lets you pick** the candidates.
+   Nothing is built until you pick it, unless you opt in to auto mode in `config.json`.
+   Well-known rules from outside your project are always offered, never built automatically.
+4. **Asks the design questions**: boundary, scope, fix, severity and rollout, each with a recommended answer and a real example from your code.
+5. **Writes the rule and its test**, and registers it.
+6. **Verifies** it: the tests pass, and every hit on your real code is accounted for.
+7. **Offers to clean up your agent docs**: for each line the new rule now enforces, you choose to delete it, shorten it to a pointer, or keep it.
+   Fewer prose rules means less context every agent session has to read.
+8. **Reports** the rules, hit counts, config changes, doc lines removed, and what it did not build.
 
 ### Configuration
 
@@ -74,15 +83,15 @@ The skill picks the first option that fits:
 A `.backend-pattern-rules.json` at your project root overrides them per project.
 
 ```json
-{ "mode": "ask", "auto": { "maxRisk": "low", "maxFlaggedFiles": 3, "adrBacked": "auto" } }
+{ "mode": "ask", "auto": { "maxRisk": "low", "maxFlaggedFiles": 3, "adrBacked": "ask" } }
 ```
 
 | Key | Meaning |
 |---|---|
-| `mode` | `"ask"`: you pick every rule. `"auto"`: rules within the `auto` limits are built without asking. |
+| `mode` | `"ask"` (default): you pick every rule. `"auto"` (opt-in): rules within the `auto` limits are built without asking. |
 | `auto.maxRisk` | Highest risk built without asking: `"low"` or `"medium"`. High-risk rules always ask. |
 | `auto.maxFlaggedFiles` | Most files a rule may report on day one and still be built without asking. |
-| `auto.adrBacked` | `"auto"`: a rule an ADR asks for, but nothing enforces yet, is built without asking in either mode. `"ask"`: it goes to you like the rest. |
+| `auto.adrBacked` | `"ask"` (default): a rule an ADR or agent doc asks for goes to you like the rest. `"auto"` (opt-in): it is built without asking in either mode, unless it is high risk. |
 
 ### Layout
 
@@ -93,7 +102,8 @@ skills/backend-pattern-rules/
 ├── agents/openai.yaml          # Codex picker metadata
 ├── references/
 │   ├── discovery.md            # candidate scan, coverage, risk, selection
-│   └── pattern-catalog.md      # signals to probe, with native checks to try first
+│   ├── pattern-catalog.md      # signals to probe, with native checks to try first
+│   └── general-rules.md        # well-known rules to suggest when the project lacks them
 └── evals/                      # a test case for `claude plugin eval`
 ```
 
