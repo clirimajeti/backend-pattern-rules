@@ -63,7 +63,7 @@ Done when every convention you will build has its good examples and its full vio
 
 For each rule, work through these, skipping whatever the code already answers:
 - **Boundary**: what is flagged.
-  Test it against the real edge cases: test code, generated code, string literals and comments, aliased and relative imports (`from .repository import`, `import x as y`), type-only imports (`if TYPE_CHECKING:`), annotations, lambdas and nested functions.
+  Test it against the real edge cases: test code, generated code, string literals and comments, aliased and relative imports (`from .repository import`, `import x as y`), type-only imports (`if TYPE_CHECKING:`), annotations, lambdas, nested functions, and fully qualified calls (`java.time.Instant.now()`, `kotlin.io.println(...)`).
 - **Scope**: which files, set through the rule's `files` and `ignores` globs.
   Folder and package names live only in those globs and in one `regex`, so another layout needs only those values edited.
 - **Fix**: `fix` when behavior is provably unchanged.
@@ -136,6 +136,7 @@ The gotchas that bite here:
 - `f($A, $$$B)` needs the comma, so it never matches a single-argument call: add `f($A)` as a second pattern.
 - A metavariable may bind a wrapper node: in Kotlin, `$S` in `f($S)` is a `value_argument`, so `constraints: {S: {kind: string_literal}}` never matches.
   Check with `--debug-query=ast`, and constrain with `regex` or `has` instead.
+- A metavariable for a type or receiver also matches a qualified name: constrain it with `(^|\.)Instant$`, not `^Instant$`, so `java.time.Instant.now()` is caught too.
 - `regex` is Rust regex: no lookahead or lookbehind.
 - ast-grep sees one file's syntax.
   A convention that needs types, data flow or other files is not an ast-grep rule: it goes into the project's own rule set when its tool can see that, and is otherwise a native-tool recommendation in the report.
@@ -210,6 +211,8 @@ Only for a rule built or enabled in this run and verified (a custom rule through
 Ask one `AskUserQuestion` per rule, quoting each line with its file and line number:
 - **Delete the line**: recommended when the fix is local and mechanical, so the rule's message alone tells an agent what to do.
 - **Shorten it to a pointer**, such as `Time: inject a Clock, never call now() directly (enforced by gen-no-clock-in-domain).`: recommended when the convention shapes code before it is written, so an agent that never saw it would build the wrong thing and redo it.
+  The pointer goes where the agent will load it: a `CLAUDE.md` in the folder the rule applies to, or an instructions file with an `applyTo` glob for those paths.
+  A pointer left only in a file the agent has to follow a link to read is not seen up front, so propose the place in the same question.
 - **Keep it as it is.**
 
 Before recommending a delete, make sure the rule's message carries what the line said, plus the ADR link if there is one.
@@ -225,10 +228,12 @@ Keep it short:
 - where each rule went (ast-grep or the project's rule set) and why
 - `sgconfig.yml` or the lint-config change, as a short diff
 - the ast-grep install command and a CI step (`ast-grep test && ast-grep scan`), when the project does not run ast-grep yet
-- the agent-doc lines deleted, shortened or kept, with a rough token saving (removed characters / 4)
+- the agent-doc lines deleted, shortened or kept, with the doc tokens removed (characters / 4), split into always-loaded and on-demand lines, since only always-loaded lines cost tokens in every session
+- the bigger saving is usually not the doc tokens but the fix rounds a rule avoids: say so instead of presenting the character count as the benefit
 - the general rules offered and not picked, and those that need a tool the project does not run
 - native alternatives worth adopting for conventions ast-grep cannot express
 - the conventions you didn't build
+- whether agents get the rule's feedback while they work: when nothing lints an agent's edits before the session ends (a hook, or an instruction to run the linter before finishing), recommend one, for example the `codemyrules` feedback loop; without it a broken rule only surfaces in CI, after the session
 - the scan log, if you scanned
 
 If you answered design questions on the user's behalf, close with one `AskUserQuestion` round that presents those answers, with yours as the first option.
