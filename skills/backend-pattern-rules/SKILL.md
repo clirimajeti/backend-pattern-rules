@@ -17,7 +17,7 @@ A check the project's own native linter or architecture test can already express
 When the project already maintains its own rule set for a native tool, new rules go into that rule set instead of ast-grep.
 JavaScript and TypeScript, including Node backends, belong to the `eslint-pattern-rules` skill.
 
-Count and locate with `rg -c` / `rg -n`, always with a path (in scripts, `rg` without one waits on stdin), confirm structural counts with `ast-grep run -p '<pattern>' -l <lang>`, and open a file only for details a count can't give.
+Count and locate with `rg -c` / `rg -n`, always with a path (in scripts, `rg` without one waits on stdin) (with several `-g` globs the last matching one wins, so put exclusions like `-g '!*.spec.ts'` after the includes), confirm structural counts with `ast-grep run -p '<pattern>' -l <lang>`, and open a file only for details a count can't give.
 
 ## 1. Detect the setup
 
@@ -29,6 +29,8 @@ Look each of these up rather than asking:
 - **Native checks already configured**: linters, banned-API lists and architecture tests, per [`references/discovery.md`](references/discovery.md) step 1.
 - **The project's own native rule set**, if any: a module with a detekt `RuleSetProvider`, Error Prone `BugChecker`s, a PMD XPath ruleset, a flake8 or pylint plugin, `go/analysis` analyzers, Roslyn analyzers, PHPStan rules, or RuboCop cops.
   Note its folder, base class, naming, test harness, how rules are registered and enabled, and any baseline file (`detekt-baseline.xml`, `phpstan-baseline.neon`).
+- **Generated code**: generator markers such as `.yo-rc.json`, `.jhipster/`, `.openapi-generator/`, `@Generated`, or `DO NOT EDIT` headers, and the source folders each generator owns.
+  A rule still guards new code there, but existing hits are fixed in the generator's template or blueprint, not by hand: say so for each hit in generated code.
 - **Decision records**: `docs/adr/`, `docs/decisions/`, `notes/decisions/`, `ADR-*.md`, CONTRIBUTING.
 - **Agent docs**: every `CLAUDE.md`, `AGENTS.md` and `GEMINI.md` in the repo, `.github/copilot-instructions.md`, `.github/instructions/*.md`, `.cursor/rules/`, `.cursorrules`, `.windsurfrules`.
 
@@ -46,6 +48,7 @@ Done when you can state each of these in one line.
 - **The user wants candidates:** read [`references/discovery.md`](references/discovery.md) and follow it.
   It covers the scan of code, decision records and agent docs, the general rules from [`references/general-rules.md`](references/general-rules.md), what is already enforced, risk, the opt-in auto mode, and the selection dialog.
 
+A tool counts as one the project **runs** when it runs in CI or a documented local check; a tool that is configured but never run (a Sonar file with no CI step), or configured for something else only (Checkstyle with just a NoHttp check), counts as `built, not enabled` for the conventions it could check.
 A native check wins when a tool the project **already runs** can express the convention, including through a rule that tool has but the project has not enabled yet: a banned-API list (Ruff `TID251`, detekt `ForbiddenMethodCall`, golangci `forbidigo`/`depguard`, `BannedApiAnalyzers`, clippy `disallowed_methods`, forbiddenapis), a ready-made linter rule, or an architecture test library that is already a dependency (ArchUnit, Konsist, import-linter, Deptrac, NetArchTest).
 Offer its exact config or test snippet as the candidate. Once picked, apply it and verify it with the project's own lint or test run instead of steps 4 and 5.
 A tool the project does not run yet is never a reason to skip the rule: mention it in the report as an alternative instead.
@@ -82,7 +85,7 @@ Put your recommended answer first and label it "(Recommended)".
 Show a real code example in the question or in an option's `preview`.
 Without the tool, ask the same rounds as a numbered list in chat.
 
-When the rule was selected automatically, or nobody can answer, answer with your recommendations and take the **safer** side: `note` over `fix`, `warning` over `error`, the narrower scope.
+When the rule was selected automatically, or nobody can answer, answer with your recommendations and take the **safer** side: `note` over `fix` and the narrower scope. Severity: `error` when the rule has no open hits, because nothing old breaks and agent feedback loops that block only on errors will show it; with open hits, `warning` plus a promotion plan, and say in the report that loops blocking on errors will not show the rule until it is promoted.
 Step 7 puts these answers to the user.
 
 Done when every question has an answer and you know who gave it.

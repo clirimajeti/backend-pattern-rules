@@ -46,6 +46,7 @@ Tests a linter never reads (a source set it skips) are enforced only by checks t
    A line that applies only to another part of the stack (backend lines in a frontend run) is out of scope.
    A line a lint rule or architecture check can verify is a candidate.
    A line about process, tone or tools ("run the tests before committing") is not.
+5. **Count suppression comments per rule** (`eslint-disable`, `@ts-expect-error`, `@Suppress`, `# noqa`, `ast-grep-ignore`, `//nolint`). Three or more for one rule mean the config fights the code: a `contradicted` candidate with "relax the rule here" or "fix the code" as the options.
 
 On a large repo, split the scan by top-level module or package, with one subagent per module when serial scanning is too slow.
 Keep a **scan log** (signal, counts, verdict) so the user can tell a quiet codebase from a shallow scan.
@@ -66,14 +67,16 @@ Done when every general rule is a candidate, already covered, or reported as nee
 **Coverage:**
 - `covered`: something in the map already enforces it.
   It appears only as a note.
-- `built, not enabled`: a rule for it exists but is switched off or only reports as a suggestion.
+- `built, not enabled`: a rule for it exists but only runs in some modules or only reports as a suggestion, or its tool is configured but never run.
   The candidate is enabling it, with its current hit count, not a new rule.
+  A rule from an installed plugin that no enabled preset turns on is `general, not used`, offered with its hit count.
+- `switched off`: the config turns the rule off on purpose (`'off'` or `0`, often with a comment). Offer it after the other project candidates, with the reason if the config gives one, since someone decided against it.
   This includes a rule enabled in only some modules.
   Its risk follows the same scale, using the hit count and majority it would enforce.
 - `documented, not enforced`: a decision record or an agent doc asks for it and nothing fails when it is broken.
 - `implicit`: the code mostly follows it, with nothing written or enforced.
 - `general, not used`: a rule from the general list that the project does not run.
-- `contradicted`: the docs say X and the code mostly does Y, or the docs ask for a check the lint config deliberately turns off.
+- `contradicted`: the docs say X and the code mostly does Y, a cluster of suppression comments fights a rule,, or the docs ask for a check the lint config deliberately turns off.
   Raise it as a question to the user and build neither side.
 
 **Risk:**
