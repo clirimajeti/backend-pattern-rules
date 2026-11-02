@@ -84,7 +84,7 @@ Done when every general rule is a candidate, already covered, or reported as nee
 - `medium`: needs relational rules (`inside`, `has`, `not`), import regexes per folder, or a `note`-only fix, or has an 80-90% majority.
 - `high`: needs types, data flow or other files, would autofix code whose behavior could change, has under an 80% majority (a team decision, not a discovery), or flags more than 20 files.
 
-A `documented, not enforced` candidate with a large legacy count is not `high` for its majority alone, because the team already decided: offer it at `warn`, or for new code only (a baseline, or an architecture test on changed files).
+A `documented, not enforced` candidate with a large legacy count is not `high` for its majority alone, because the team already decided: offer it for new code only: the suggestions layer (SKILL.md step 4), a baseline, or an architecture test on changed files.
 
 For each candidate, also note: one sentence on why it matters in project terms, the evidence, the flagged-file count, the ADR or agent-doc lines if any, and whether a native check the project already runs expresses it (then the candidate gets that check's exact config instead of a rule).
 A `high` candidate that needs types or other files gets a native-tool recommendation instead of a rule.

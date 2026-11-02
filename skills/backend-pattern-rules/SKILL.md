@@ -75,7 +75,8 @@ For each rule, work through these, skipping whatever the code already answers:
   Severity is `error`, `warning`, `info` or `hint`.
   Only `error` fails `ast-grep scan`, so a `warning` rule does not break CI until it is promoted, or CI runs `ast-grep scan --error=gen-<name>`.
   In the project's rule set, use that tool's own severity and fail-threshold settings, and "safer" means the setting that does not fail the build.
-- **Rollout**, when enabling a rule would fail the build on day one: fix the hits first, enable it with the existing hits in a baseline (new code only), or enable it per module.
+- **Layer**: the main config, or the suggestions layer (step 4) when the existing code breaks the rule.
+- **Rollout**, when enabling a rule would fail the build on day one: the suggestions layer (new code only, through the feedback loop and on demand, CI unchanged), fix the hits first, enable it with the existing hits in a baseline, or enable it per module.
 - **Test code**: the tool's source-set config decides whether tests are linted at all.
   A convention that must also hold in tests a tool never reads is a design question, not something the rule can change.
   Recommend the check that already reads tests: an existing ArchUnit or Konsist test-architecture class first, else an ast-grep rule scoped to the test folders.
@@ -85,7 +86,9 @@ Put your recommended answer first and label it "(Recommended)".
 Show a real code example in the question or in an option's `preview`.
 Without the tool, ask the same rounds as a numbered list in chat.
 
-When the rule was selected automatically, or nobody can answer, answer with your recommendations and take the **safer** side: `note` over `fix` and the narrower scope. Severity: `error` when the rule has no open hits, because nothing old breaks and agent feedback loops that block only on errors will show it; with open hits, `warning` plus a promotion plan, and say in the report that loops blocking on errors will not show the rule until it is promoted.
+When the rule was selected automatically, or nobody can answer, answer with your recommendations and take the **safer** side: `note` over `fix` and the narrower scope.
+Severity: always `error`.
+With no open hits the rule goes in the main config, because nothing old breaks; with open hits it goes in the suggestions layer (step 4), so CI stays green while agent feedback loops, which block only on errors, still show it on new code.
 Step 7 puts these answers to the user.
 
 Done when every question has an answer and you know who gave it.
@@ -191,6 +194,21 @@ When step 2 chose the project's own rule set, its existing rules are the templat
 - **Baselines**: never add the new rule's hits to a baseline file (`detekt-baseline.xml`, `phpstan-baseline.neon`) on your own.
   Report the hits, and offer the baseline as a design question when the user wants the rule enforced only for new code.
 
+**Suggestions layer**, for a rule the existing code breaks.
+At `error` in the main config it would fail `ast-grep scan` and CI on day one; at `warning` a feedback loop never shows it, since loops block only on errors.
+So it goes into a second rule folder at `error`, which the main config does not load:
+- the rule in `ast-grep/suggestions/gen-<name>.yml` (beside the project's rule folder), its test in the usual test folder;
+- `sgconfig.suggestions.yml` in the root: the main config's content with the suggestions folder added to `ruleDirs`:
+  ```yaml
+  ruleDirs: [ast-grep/rules, ast-grep/suggestions]
+  testConfigs:
+    - testDir: ast-grep/rule-tests
+  ```
+- `sgconfig.yml` stays as it is, so `ast-grep scan` and CI see only the main rules, and plain `ast-grep test` skips the suggestion tests; `ast-grep test -c sgconfig.suggestions.yml` tests every rule, so propose that as the CI test step.
+- Anyone working on a file, and a feedback loop, runs `ast-grep scan -c sgconfig.suggestions.yml <files>`.
+- In the project's own rule set, use the tool's own way of layering a second config the same way (detekt `--config base.yml,suggestions.yml`, Ruff `--config ruff.suggestions.toml` with `extend = "pyproject.toml"`), or its baseline as a design question.
+- When a rule's open hits reach 0, move it to the main rule folder.
+
 ## 5. Verify
 
 For a rule in the project's rule set, run its module's tests, then the project's lint task over the real code (`./gradlew detekt`, `mvn compile` with Error Prone, `flake8`, `golangci-lint run`), and work through steps 4 and 5 below with that output.
@@ -204,13 +222,15 @@ A baseline can hide hits: `rg -c <rule-id>` over the baseline files first, and w
 4. Account for every hit: each one is a violation under the agreed boundary.
    A false positive becomes a `valid` test and a rule fix, then a rerun.
    A file in scope with no hit that should have one becomes an `invalid` test.
-5. Run plain `ast-grep scan` once, to confirm `sgconfig.yml` loads and reports `gen-<name>`.
+5. Run plain `ast-grep scan` once, to confirm `sgconfig.yml` loads and reports `gen-<name>`; for a suggestion rule, run `ast-grep scan -c sgconfig.suggestions.yml` for that, and confirm plain `ast-grep scan` reports nothing new.
 
 Done when the tests pass with snapshots, every hit is accounted for, and the project-wide scan reports the rule.
 
 ## 6. Offer the agent-doc cleanup
 
 Only for a rule built or enabled in this run and verified (a custom rule through step 5, a config change through the project's own lint run), and only for the agent-doc lines that state the convention it now enforces.
+A rule in the suggestions layer counts: a feedback loop that runs the suggestions config shows it on every changed line.
+Without such a loop, say in the question that only people who run the suggestions config see it.
 Ask one `AskUserQuestion` per rule, quoting each line with its file and line number:
 - **Delete the line**: recommended when the fix is local and mechanical, so the rule's message alone tells an agent what to do.
 - **Shorten it to a pointer**, such as `Time: inject a Clock, never call now() directly (enforced by gen-no-clock-in-domain).`: recommended when the convention shapes code before it is written, so an agent that never saw it would build the wrong thing and redo it.
@@ -230,6 +250,7 @@ Keep it short:
 - each rule, with its hit count and a few hits
 - where each rule went (ast-grep or the project's rule set) and why
 - `sgconfig.yml` or the lint-config change, as a short diff
+- the suggestions layer, when there is one: its rules with their open hits, the command to run it, the proposed CI test step, and that each rule moves to the main folder once its hits reach 0
 - the ast-grep install command and a CI step (`ast-grep test && ast-grep scan`), when the project does not run ast-grep yet
 - the agent-doc lines deleted, shortened or kept, with the doc tokens removed (characters / 4), split into always-loaded and on-demand lines, since only always-loaded lines cost tokens in every session
 - the bigger saving is usually not the doc tokens but the fix rounds a rule avoids: say so instead of presenting the character count as the benefit

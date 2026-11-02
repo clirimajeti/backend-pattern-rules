@@ -72,6 +72,7 @@ The skill picks the first option that fits:
    Well-known rules from outside your project are always offered, never built automatically.
 4. **Asks the design questions**: boundary, scope, fix, severity and rollout, each with a recommended answer and a real example from your code.
 5. **Writes the rule and its test**, and registers it.
+   A rule your existing code breaks goes into a suggestions layer (`sgconfig.suggestions.yml`) instead, so CI stays green while new code is still checked.
 6. **Verifies** it: the tests pass, and every hit on your real code is accounted for.
 7. **Offers to clean up your agent docs**: for each line the new rule now enforces, you choose to delete it, shorten it to a pointer, or keep it.
    Fewer prose rules means less context every agent session has to read.
