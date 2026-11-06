@@ -46,7 +46,7 @@ Done when you can state each of these in one line.
   When two ADRs say the same thing, link the newest accepted one and mention the other.
   Note every agent-doc line that states the same convention, for step 6.
 - **The user wants candidates:** read [`references/discovery.md`](references/discovery.md) and follow it.
-  It covers the scan of code, decision records and agent docs, the general rules from [`references/general-rules.md`](references/general-rules.md), what is already enforced, risk, the opt-in auto mode, and the selection dialog.
+  It covers the scan of code, decision records and agent docs, the general rules from [`references/general-rules.md`](references/general-rules.md), what is already enforced, risk, the mode question (automatic or manual), and the selection dialog.
 
 A tool counts as one the project **runs** when it runs in CI or a documented local check; a tool that is configured but never run (a Sonar file with no CI step), or configured for something else only (Checkstyle with just a NoHttp check), counts as `built, not enabled` for the conventions it could check.
 A native check wins when a tool the project **already runs** can express the convention, including through a rule that tool has but the project has not enabled yet: a banned-API list (Ruff `TID251`, detekt `ForbiddenMethodCall`, golangci `forbidigo`/`depguard`, `BannedApiAnalyzers`, clippy `disallowed_methods`, forbiddenapis), a ready-made linter rule, or an architecture test library that is already a dependency (ArchUnit, Konsist, import-linter, Deptrac, NetArchTest).
@@ -231,7 +231,9 @@ Done when the tests pass with snapshots, every hit is accounted for, and the pro
 Only for a rule built or enabled in this run and verified (a custom rule through step 5, a config change through the project's own lint run), and only for the agent-doc lines that state the convention it now enforces.
 A rule in the suggestions layer counts: a feedback loop that runs the suggestions config shows it on every changed line.
 Without such a loop, say in the question that only people who run the suggestions config see it.
-Ask one `AskUserQuestion` per rule, quoting each line with its file and line number:
+The cleanup always asks, in both modes: it changes a doc.
+In manual mode, ask one `AskUserQuestion` per rule; in automatic mode, ask the lines of every built rule in one call after the builds.
+Quote each line with its file and line number:
 - **Delete the line**: recommended when the fix is local and mechanical, so the rule's message alone tells an agent what to do.
 - **Shorten it to a pointer**, such as `Time: inject a Clock, never call now() directly (enforced by gen-no-clock-in-domain).`: recommended when the convention shapes code before it is written, so an agent that never saw it would build the wrong thing and redo it.
   The pointer goes where the agent will load it: a `CLAUDE.md` in the folder the rule applies to, or an instructions file with an `applyTo` glob for those paths.

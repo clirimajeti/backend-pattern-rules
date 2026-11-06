@@ -67,10 +67,12 @@ The skill picks the first option that fits:
    The scan looks at your code, your ADRs and the rules written as prose in your agent docs.
    It also checks a list of well-known clean-code, bug-prevention, security and test rules your linters have but your project doesn't use yet, with how many places each would flag today.
    It skips anything already enforced.
-3. **Lets you pick** the candidates.
-   Nothing is built until you pick it, unless you opt in to auto mode in `config.json`.
-   Well-known rules from outside your project are always offered, never built automatically.
+3. **Selects the candidates.**
+   First asks: automatic or manual.
+   Automatic builds every recommended rule and asks only for doc changes, doc-vs-code contradictions and high-risk rules.
+   Manual shows every candidate in one selection, well-known rules included, recommended ones marked, and builds only what you pick.
 4. **Asks the design questions**: boundary, scope, fix, severity and rollout, each with a recommended answer and a real example from your code.
+   In automatic mode the skill answers them itself and shows you its answers for review at the end.
 5. **Writes the rule and its test**, and registers it.
    A rule your existing code breaks goes into a suggestions layer (`sgconfig.suggestions.yml`) instead, so CI stays green while new code is still checked.
 6. **Verifies** it: the tests pass, and every hit on your real code is accounted for.
@@ -78,28 +80,11 @@ The skill picks the first option that fits:
    Fewer prose rules means less context every agent session has to read.
 8. **Reports** the rules, hit counts, config changes, doc lines removed, and what it did not build.
 
-### Configuration
-
-`skills/backend-pattern-rules/config.json` holds the defaults.
-A `.backend-pattern-rules.json` at your project root overrides them per project.
-
-```json
-{ "mode": "ask", "auto": { "maxRisk": "low", "maxFlaggedFiles": 3, "adrBacked": "ask" } }
-```
-
-| Key | Meaning |
-|---|---|
-| `mode` | `"ask"` (default): you pick every rule. `"auto"` (opt-in): rules within the `auto` limits are built without asking. |
-| `auto.maxRisk` | Highest risk built without asking: `"low"` or `"medium"`. High-risk rules always ask. |
-| `auto.maxFlaggedFiles` | Most files a rule may report on day one and still be built without asking. |
-| `auto.adrBacked` | `"ask"` (default): a rule an ADR or agent doc asks for goes to you like the rest. `"auto"` (opt-in): it is built without asking in either mode, unless it is high risk. |
-
 ### Layout
 
 ```
 skills/backend-pattern-rules/
 ├── SKILL.md                    # the workflow
-├── config.json                 # selection defaults
 ├── agents/openai.yaml          # Codex picker metadata
 ├── references/
 │   ├── discovery.md            # candidate scan, coverage, risk, selection
