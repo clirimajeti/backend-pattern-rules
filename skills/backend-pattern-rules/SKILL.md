@@ -1,6 +1,10 @@
 ---
 name: backend-pattern-rules
-description: Turn a backend codebase's own conventions into ast-grep lint rules with tests, or into the project's existing custom rule set (detekt, Error Prone, flake8/pylint plugins and similar), for Java, Kotlin, Python, Go, C#, PHP, Rust, Ruby and other non-JS languages. Use when the user wants a custom lint rule or architecture check for backend code, asks which of their patterns, ADRs or CLAUDE.md / AGENTS.md instructions could become lint rules, asks which clean-code, bug-prevention, security or test rules the backend lacks, or wants to enforce a convention the code mostly follows.
+description: Turn a backend codebase's own conventions into ast-grep lint rules with tests, or into the project's existing custom rule set (detekt, Error Prone, flake8/pylint plugins and similar), for Java, Kotlin, Python, Go, C#, PHP, Rust, Ruby and other non-JS languages. Use when the user wants a custom lint rule or architecture check for backend code, asks which of their patterns, ADRs or CLAUDE.md / AGENTS.md instructions could become lint rules, asks which clean-code, bug-prevention, security or test rules the backend lacks, or wants to enforce a convention the code mostly follows. Not for JS, TS, Vue or Svelte code; use eslint-pattern-rules instead.
+version: "0.2.0"
+metadata:
+  author: clirimajeti <clirimajeti@gmail.com>
+  tags: [ast-grep, lint, custom-rules, architecture, code-quality]
 ---
 
 # Backend Pattern Rules
@@ -51,6 +55,7 @@ Done when you can state each of these in one line.
 A tool counts as one the project **runs** when it runs in CI or a documented local check; a tool that is configured but never run (a Sonar file with no CI step), or configured for something else only (Checkstyle with just a NoHttp check), counts as `built, not enabled` for the conventions it could check.
 A native check wins when a tool the project **already runs** can express the convention, including through a rule that tool has but the project has not enabled yet: a banned-API list (Ruff `TID251`, detekt `ForbiddenMethodCall`, golangci `forbidigo`/`depguard`, `BannedApiAnalyzers`, clippy `disallowed_methods`, forbiddenapis), a ready-made linter rule, or an architecture test library that is already a dependency (ArchUnit, Konsist, import-linter, Deptrac, NetArchTest).
 Offer its exact config or test snippet as the candidate. Once picked, apply it and verify it with the project's own lint or test run instead of steps 4 and 5.
+Set the tool's own message field as step 3 describes, and check that the lint or test run shows it: Ruff `banned-api` `msg`, detekt `ForbiddenMethodCall` and `ForbiddenImport` `reason`, golangci `forbidigo` `msg` and `depguard` `desc`, clippy `disallowed-methods` `reason`, the text after `;` on a `BannedSymbols.txt` line, an ArchUnit rule's `.because(...)`.
 A tool the project does not run yet is never a reason to skip the rule: mention it in the report as an alternative instead.
 ast-grep always counts as available, because it runs through `npx` without any project change.
 A custom rule earns its place when the convention needs folder scoping, "only through *our* helper" logic, structural context, a tailored message or a fix.
@@ -72,6 +77,7 @@ For each rule, work through these, skipping whatever the code already answers:
 - **Fix**: `fix` when behavior is provably unchanged.
   When a human should confirm, leave `fix` out and put the replacement in `note`.
 - **Message, note, severity, id** (`gen-<name>` for ast-grep, the rule set's own naming otherwise).
+  The message says what is wrong, what to write instead, and where the rule comes from (`ADR 0043`, or the agent doc it replaces), in one sentence: once its agent-doc line is gone, the message is all an agent sees.
   Severity is `error`, `warning`, `info` or `hint`.
   Only `error` fails `ast-grep scan`, so a `warning` rule does not break CI until it is promoted, or CI runs `ast-grep scan --error=gen-<name>`.
   In the project's rule set, use that tool's own severity and fail-threshold settings, and "safer" means the setting that does not fail the build.
@@ -224,7 +230,7 @@ A baseline can hide hits: `rg -c <rule-id>` over the baseline files first, and w
    A file in scope with no hit that should have one becomes an `invalid` test.
 5. Run plain `ast-grep scan` once, to confirm `sgconfig.yml` loads and reports `gen-<name>`; for a suggestion rule, run `ast-grep scan -c sgconfig.suggestions.yml` for that, and confirm plain `ast-grep scan` reports nothing new.
 
-Done when the tests pass with snapshots, every hit is accounted for, and the project-wide scan reports the rule.
+Done when the tests pass with snapshots, every hit is accounted for, the project-wide scan reports the rule, and its message names its source.
 
 ## 6. Offer the agent-doc cleanup
 
@@ -241,6 +247,7 @@ Quote each line with its file and line number:
 - **Keep it as it is.**
 
 Before recommending a delete, make sure the rule's message carries what the line said, plus the ADR link if there is one.
+A built-in rule whose tool has no message field, or whose message does not carry the line, never gets the delete option: offer the pointer or keep.
 Edit the doc only as answered, and never touch a line no verified rule covers.
 With nobody to answer, change no doc and list the lines in the report.
 

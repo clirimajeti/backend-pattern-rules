@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: builtin-message-python
+expected_outcome: |
+  ADR 0011 enforced through the project's own Ruff with the banned-api check (TID251) in pyproject.toml, each banned entry with a msg that names ADR 0011 and says to take a Clock, scoped so only app/domain/orders.py and app/domain/invoices.py are flagged (not app/shared/clock.py or app/api/health.py), with dependencies and CLAUDE.md unchanged.
+context:
+  scaffold_script: place-files.sh
