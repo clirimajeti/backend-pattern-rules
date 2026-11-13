@@ -29,6 +29,7 @@ Each one is evidence, and each one marks its convention as **covered**:
   - PHP: `phpstan.neon` (with `disallowed-calls`), `psalm.xml`.
   - Rust: `clippy.toml` (`disallowed-methods`, `disallowed-types`).
   - Ruby: `.rubocop.yml`, Packwerk.
+  - PowerShell: `PSScriptAnalyzerSettings.psd1` and its `CustomRulePath` modules, per [`powershell.md`](powershell.md).
 - **The project's own rule sets**: custom detekt rule sets, Error Prone checks, flake8 or pylint plugins, analyzers.
   Read which rules are enabled in the lint config, not just which exist.
 - **Does it actually run?** An enabled rule counts as enforced only when the lint task can run it.

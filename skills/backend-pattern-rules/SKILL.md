@@ -1,6 +1,6 @@
 ---
 name: backend-pattern-rules
-description: Turn a backend codebase's own conventions into ast-grep lint rules with tests, or into the project's existing custom rule set (detekt, Error Prone, flake8/pylint plugins and similar), for Java, Kotlin, Python, Go, C#, PHP, Rust, Ruby and other non-JS languages. Use when the user wants a custom lint rule or architecture check for backend code, asks which of their patterns, ADRs or CLAUDE.md / AGENTS.md instructions could become lint rules, asks which clean-code, bug-prevention, security or test rules the backend lacks, or wants to enforce a convention the code mostly follows. Not for JS, TS, Vue or Svelte code; use eslint-pattern-rules instead.
+description: Turn a backend codebase's own conventions into ast-grep lint rules with tests, or into the project's existing custom rule set (detekt, Error Prone, flake8/pylint plugins and similar), for Java, Kotlin, Python, Go, C#, PHP, Rust, Ruby, PowerShell (PSScriptAnalyzer rules) and other non-JS languages. Use when the user wants a custom lint rule or architecture check for backend code, asks which of their patterns, ADRs or CLAUDE.md / AGENTS.md instructions could become lint rules, asks which clean-code, bug-prevention, security or test rules the backend lacks, or wants to enforce a convention the code mostly follows. Not for JS, TS, Vue or Svelte code; use eslint-pattern-rules instead.
 version: "0.2.0"
 metadata:
   author: clirimajeti <clirimajeti@gmail.com>
@@ -20,13 +20,14 @@ Rules are written for [ast-grep](https://ast-grep.github.io): one YAML rule and 
 A check the project's own native linter or architecture test can already express wins over a custom rule.
 When the project already maintains its own rule set for a native tool, new rules go into that rule set instead of ast-grep.
 JavaScript and TypeScript, including Node backends, belong to the `eslint-pattern-rules` skill.
+PowerShell has no ast-grep grammar: its rules are PSScriptAnalyzer rules, and [`references/powershell.md`](references/powershell.md) replaces the ast-grep parts of steps 1, 2, 4 and 5 for it.
 
 Count and locate with `rg -c` / `rg -n`, always with a path (in scripts, `rg` without one waits on stdin) (with several `-g` globs the last matching one wins, so put exclusions like `-g '!*.spec.ts'` after the includes), confirm structural counts with `ast-grep run -p '<pattern>' -l <lang>`, and open a file only for details a count can't give.
 
 ## 1. Detect the setup
 
 Look each of these up rather than asking:
-- **Languages and build tools**: `pom.xml`, `build.gradle(.kts)`, `pyproject.toml`, `go.mod`, `*.csproj`, `composer.json`, `Cargo.toml`, `Gemfile`.
+- **Languages and build tools**: `pom.xml`, `build.gradle(.kts)`, `pyproject.toml`, `go.mod`, `*.csproj`, `composer.json`, `Cargo.toml`, `Gemfile`, PowerShell sources (`.ps1`, `.psm1`).
   Note the source roots, the test folders, and generated code (`target/`, `build/`, `generated-sources/`, `migrations/`, `*_pb2.py`, `*.pb.go`).
 - **ast-grep**: an existing `sgconfig.yml`, its `ruleDirs` and `testConfigs`, and how the project runs ast-grep (a pinned dependency, a CI step, a pre-commit hook).
   Find the version to use with `npm view @ast-grep/cli version` when the project pins none.
@@ -63,6 +64,7 @@ A custom rule earns its place when the convention needs folder scoping, "only th
 **Where a custom rule goes:**
 - **The project has its own rule set** for the language: the rule goes there, written exactly like its existing rules, per "Into the project's rule set" in step 4.
   This also opens what ast-grep cannot do when the tool can: types and resolved symbols.
+- **PowerShell**: a PSScriptAnalyzer settings change or custom rule, per [`references/powershell.md`](references/powershell.md).
 - **Otherwise**: an ast-grep rule.
 
 Done when every convention you will build has its good examples and its full violation list.
