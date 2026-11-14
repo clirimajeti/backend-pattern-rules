@@ -103,6 +103,9 @@ The gotchas that bite here:
   A narrower parameter type (`FunctionDefinitionAst`, `CommandAst`, `ParamBlockAst`) is called per such node and needs no `FindAll`.
 - The parameter type must be an exact AST class from `System.Management.Automation.Language`, and the function must be exported, or PSScriptAnalyzer silently skips it.
 - `GetCommandName()` returns the name as written: compare case-insensitively (PowerShell's `-eq` already does) and decide in step 3 whether aliases and module-qualified names (`Microsoft.PowerShell.Utility\Write-Host`) count.
+- The reported rule name is whatever the rule puts in `RuleName`: a literal gives that name, while `$PSCmdlet.MyInvocation.InvocationName`, common in existing rule modules, gives `<Module>\Measure-<Name>`, because PSScriptAnalyzer calls rules module-qualified.
+  Suppressions and the loop's baseline ids use the reported name; `IncludeRules` takes only the plain function name, and a qualified one matches nothing, silently.
+  In an existing module, follow its style and read the names from a real run.
 - The `Extent` decides the reported line: use the smallest node that shows the problem.
 - Severity is `Error` unless the user chose otherwise: the loop and most CI steps act on it.
 - The message names the source (the ADR or the doc line it replaces), as step 3 of the skill requires.
