@@ -136,6 +136,7 @@ Module manifests (`.psd1` files with `ModuleVersion`) stay byte-identical, like 
 
 **Suggestions layer**, for a rule the existing code breaks: a `.psd1` cannot extend another, so `PSScriptAnalyzerSettings.suggestions.psd1` is a copy of the main settings with the suggestion rules added.
 The main settings stay as they are, so CI and the editor see only the main rules; the loop runs the suggestions file.
+One exception: `CustomRulePath` loads every rule in the module, so a suggestion rule in the same module as the main rules needs its plain name in `ExcludeRules` of every main settings file (CI, editor), and nothing else changes there.
 When a rule's open hits reach 0, move it to the main settings.
 
 ## 4. Verify
