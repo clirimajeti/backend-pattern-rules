@@ -9,7 +9,7 @@ They live in review comments and in the heads of whoever was around when they we
 This skill finds them, asks you which ones to enforce and how, and writes one rule per convention.
 The majority pattern becomes the only pattern.
 
-It works with Java, Kotlin, Python, Go, C#, PHP, Rust, Ruby and any other language [ast-grep](https://ast-grep.github.io) parses.
+It works with Java, Kotlin, Python, Go, C#, PHP, Rust, Ruby and any other language [ast-grep](https://ast-grep.github.io) parses, and with PowerShell through PSScriptAnalyzer.
 For JavaScript and TypeScript, including Node backends, use the companion skill `eslint-pattern-rules`.
 
 ## Installation

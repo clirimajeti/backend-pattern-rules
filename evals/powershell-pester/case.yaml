@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: powershell-pester
+expected_outcome: |
+  On the real Pester repository (pinned), the agent-doc standards are checked against what PSScriptAnalyzer already enforces: the two documented rules (Measure-ObjectCmdlets, Measure-SafeCommands) are reported as covered by Pester's own rule module, found through the CI settings in .github/workflows/, and not rebuilt; any new rule goes into Pester.BuildAnalyzerRules, never ast-grep or a new rule folder; the GitHub-workflow, signing and build instructions are reported as not lintable; the stale code-analysis.yml reference is noticed; the agent docs stay unchanged.
+context:
+  scaffold_script: place-files.sh
