@@ -35,7 +35,7 @@ Built-in rules that cover common PowerShell standards (check each one against `G
 |---|---|---|
 | Approved verbs, singular nouns | `PSUseApprovedVerbs`, `PSUseSingularNouns` | |
 | No aliases in scripts (`gci`, `%`, `?`) | `PSAvoidUsingCmdletAliases` | `allowlist` |
-| Named parameters, not positional | `PSAvoidUsingPositionalParameters` (Information) | |
+| Named parameters, not positional | `PSAvoidUsingPositionalParameters` (Information); it fires only at 3 or more positional arguments, so `Get-Service $Name` passes: a stricter standard needs a custom rule | `CommandAllowList` |
 | Brace style (OTBS, Allman) | `PSPlaceOpenBrace`, `PSPlaceCloseBrace` | `Enable`, `OnSameLine`, `NewLineAfter` |
 | Indentation | `PSUseConsistentIndentation` | `Enable`, `IndentationSize`, `Kind` |
 | Whitespace around operators and braces | `PSUseConsistentWhitespace` | `Enable`, `CheckOperator`, `CheckSeparator` and others |
